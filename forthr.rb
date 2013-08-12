@@ -3,8 +3,9 @@ class ForthR
     @stack = []
     @output = []
     @words = {
-      ".s" => lambda { @output << @stack.join(" ") },
-      "." => lambda { @stack.pop }, 
+      ".s"   => lambda { @output << @stack.join(" ") },
+      "."    => lambda { @stack.pop }, 
+      "dup"  => lambda { @stack << @stack.last}, 
     }
   end
 
@@ -19,7 +20,7 @@ class ForthR
   end
 
   def output
-    @output.join
+    @output.join("\n")
   end
 
   def size

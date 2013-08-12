@@ -28,6 +28,6 @@ class ForthR
   end
 
   def tokenize(line)
-    line.split(" ")
+    line.split(" ").map {|word| word.downcase }
   end
 end

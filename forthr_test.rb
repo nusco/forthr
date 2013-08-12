@@ -26,6 +26,11 @@ class TestStack < Minitest::Test
     assert_equal 3, @f.size
   end
 
+  def test_case_insensitivity
+    @f << "1 DUP dup .S .s"
+    assert_equal "1 1 1\n1 1 1", @f.output
+  end
+    
   def test_ignores_spaces
     @f << " 1  2    3  "
     assert_equal 3, @f.size

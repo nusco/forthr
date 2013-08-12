@@ -5,6 +5,10 @@ class ForthR
     @words = {
       ".s"   => lambda { @output << @stack.join(" ") },
       "."    => lambda { @output << @stack.pop }, 
+      "+"    => lambda { @stack << @stack.pop + @stack.pop }, 
+      "-"    => lambda { @stack << -@stack.pop + @stack.pop }, 
+      "*"    => lambda { @stack << @stack.pop * @stack.pop }, 
+      "/"    => lambda { div = @stack.pop; @stack << @stack.pop / div}, 
       "dup"  => lambda { @stack << @stack.last}, 
     }
   end

@@ -16,6 +16,26 @@ class TestStack < Minitest::Test
     assert_equal "3\n2\n1", @f.output
   end
 
+  def test_addition
+    @f << "1 2 + .s"
+    assert_equal "3", @f.output
+  end
+
+  def test_subtraction
+    @f << "3 2 - .s"
+    assert_equal "1", @f.output
+  end
+
+  def test_multiplication
+    @f << "3 2 * .s"
+    assert_equal "6", @f.output
+  end
+
+  def test_division
+    @f << "11 5 / .s"
+    assert_equal "2", @f.output
+  end
+
   def test_dup
     @f << "1 2 dup .s"
     assert_equal "1 2 2", @f.output

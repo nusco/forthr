@@ -1,10 +1,10 @@
 class ForthR
   def initialize
     @s = []
-    @out = []
-    @words = {
-      ".s"      => lambda { @out << @s.join(" ") },
-      "."       => lambda { @out << @s.pop }, 
+    @out = ""
+    @dictionary = {
+      ".s"      => lambda { @out << "#{@s.join(' ')} " },
+      "."       => lambda { @out << "#{@s.pop} " }, 
       "+"       => lambda { @s << @s.pop + @s.pop }, 
       "-"       => lambda { @s << -@s.pop + @s.pop }, 
       "*"       => lambda { @s << @s.pop * @s.pop }, 
@@ -22,12 +22,12 @@ class ForthR
 
   def <<(line)
     tokenize(line).each do |command|
-      @words[command] ? @words[command].call : push(command)
+      @dictionary[command] ? @dictionary[command].call : push(command)
     end
   end
 
   def output
-    @out.join("\n")
+    @out
   end
 
   def push(command)

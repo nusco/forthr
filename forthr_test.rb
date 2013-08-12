@@ -6,7 +6,17 @@ class TestStack < Minitest::Test
     @f = ForthR.new
   end
 
-  def test_inserts
+  def test_prints_stack
+    @f << "1 2 3 .s 4"
+    assert_equal "1 2 3", @f.output
+  end
+  
+  def test_dot_word
+    @f << "1 2 3 . . .s"
+    assert_equal "1", @f.output
+  end
+
+  def test_knows_stack_size
     @f << "1 2 3"
     assert_equal 3, @f.size
   end

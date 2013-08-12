@@ -1,12 +1,25 @@
 class ForthR
   def initialize
     @stack = []
+    @output = []
+    @words = {
+      ".s" => lambda { @output << @stack.join(" ") },
+      "." => lambda { @stack.pop }, 
+    }
   end
 
   def <<(line)
     tokenize(line).each do |command|
-      @stack << command
+      if @words[command]
+        @words[command].call
+      else
+        @stack << command
+      end
     end
+  end
+
+  def output
+    @output.join
   end
 
   def size
@@ -14,8 +27,6 @@ class ForthR
   end
 
   def tokenize(line)
-    commands = line.split(/\s*/).compact
-    commands.delete("")
-    commands
+    line.split(" ")
   end
 end

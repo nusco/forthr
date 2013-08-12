@@ -8,8 +8,10 @@ class ForthR
       "+"       => lambda { @s << @s.pop + @s.pop }, 
       "-"       => lambda { @s << -@s.pop + @s.pop }, 
       "*"       => lambda { @s << @s.pop * @s.pop }, 
-      "/"       => lambda { div = @s.pop; @s << @s.pop / div}, 
+      "/"       => lambda { y, x = @s.pop, @s.pop; @s << x / y },
       "negate"  => lambda { @s << -@s.pop }, 
+      "mod"     => lambda { y, x = @s.pop, @s.pop; @s << x % y },
+      "/mod"    => lambda { y, x = @s.pop, @s.pop; @s << x % y << x / y }, 
       "dup"     => lambda { @s << @s.last}, 
     }
   end

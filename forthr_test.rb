@@ -41,6 +41,16 @@ class TestStack < Minitest::Test
     assert_equal "-42", @f.output
   end
 
+  def test_mod
+    @f << "8 3 mod .s"
+    assert_equal "2", @f.output
+  end
+
+  def test_slashmod
+    @f << "7 3 /mod .s"
+    assert_equal "1 2", @f.output
+  end
+
   def test_dup
     @f << "1 2 dup .s"
     assert_equal "1 2 2", @f.output

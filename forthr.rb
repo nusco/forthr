@@ -13,6 +13,10 @@ class ForthR
       "mod"     => lambda { y, x = @s.pop, @s.pop; @s << x % y },
       "/mod"    => lambda { y, x = @s.pop, @s.pop; @s << x % y << x / y }, 
       "dup"     => lambda { @s << @s.last}, 
+      "drop"    => lambda { @s.pop }, 
+      "swap"    => lambda { y, x = @s.pop, @s.pop; @s << y << x }, 
+      "nip"     => lambda { y, x = @s.pop, @s.pop; @s << y }, 
+      "tuck"    => lambda { y, x = @s.pop, @s.pop; @s << y << x << y }, 
     }
   end
 

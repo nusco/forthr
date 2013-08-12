@@ -56,6 +56,26 @@ class TestStack < Minitest::Test
     assert_equal "1 2 2", @f.output
   end
 
+  def test_drop
+    @f << "1 2 drop .s"
+    assert_equal "1", @f.output
+  end
+
+  def test_swap
+    @f << "1 2 3 swap .s"
+    assert_equal "1 3 2", @f.output
+  end
+
+  def test_nip
+    @f << "1 2 3 nip .s"
+    assert_equal "1 3", @f.output
+  end
+
+  def test_tuck
+    @f << "1 2 3 tuck .s"
+    assert_equal "1 3 2 3", @f.output
+  end
+
   def test_stack_size
     @f << "1 2 3"
     assert_equal 3, @f.size

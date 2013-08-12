@@ -1,16 +1,16 @@
 class ForthR
   def initialize
-    @stack = []
-    @output = []
+    @s = []
+    @out = []
     @words = {
-      ".s"      => lambda { @output << @stack.join(" ") },
-      "."       => lambda { @output << @stack.pop }, 
-      "+"       => lambda { @stack << @stack.pop + @stack.pop }, 
-      "-"       => lambda { @stack << -@stack.pop + @stack.pop }, 
-      "*"       => lambda { @stack << @stack.pop * @stack.pop }, 
-      "/"       => lambda { div = @stack.pop; @stack << @stack.pop / div}, 
-      "negate"  => lambda { @stack << -@stack.pop }, 
-      "dup"     => lambda { @stack << @stack.last}, 
+      ".s"      => lambda { @out << @s.join(" ") },
+      "."       => lambda { @out << @s.pop }, 
+      "+"       => lambda { @s << @s.pop + @s.pop }, 
+      "-"       => lambda { @s << -@s.pop + @s.pop }, 
+      "*"       => lambda { @s << @s.pop * @s.pop }, 
+      "/"       => lambda { div = @s.pop; @s << @s.pop / div}, 
+      "negate"  => lambda { @s << -@s.pop }, 
+      "dup"     => lambda { @s << @s.last}, 
     }
   end
 
@@ -20,7 +20,7 @@ class ForthR
         @words[command].call
       else
         begin
-          @stack << Integer(command)
+          @s << Integer(command)
         rescue
           raise "Unknown word: #{command}"
         end
@@ -29,11 +29,11 @@ class ForthR
   end
 
   def output
-    @output.join("\n")
+    @out.join("\n")
   end
 
   def size
-    @stack.size
+    @s.size
   end
 
   def tokenize(line)

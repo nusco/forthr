@@ -36,6 +36,11 @@ class TestStack < Minitest::Test
     assert_equal "2", @f.output
   end
 
+  def test_negation
+    @f << "42 negate .s"
+    assert_equal "-42", @f.output
+  end
+
   def test_dup
     @f << "1 2 dup .s"
     assert_equal "1 2 2", @f.output

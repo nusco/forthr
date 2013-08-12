@@ -3,13 +3,14 @@ class ForthR
     @stack = []
     @output = []
     @words = {
-      ".s"   => lambda { @output << @stack.join(" ") },
-      "."    => lambda { @output << @stack.pop }, 
-      "+"    => lambda { @stack << @stack.pop + @stack.pop }, 
-      "-"    => lambda { @stack << -@stack.pop + @stack.pop }, 
-      "*"    => lambda { @stack << @stack.pop * @stack.pop }, 
-      "/"    => lambda { div = @stack.pop; @stack << @stack.pop / div}, 
-      "dup"  => lambda { @stack << @stack.last}, 
+      ".s"      => lambda { @output << @stack.join(" ") },
+      "."       => lambda { @output << @stack.pop }, 
+      "+"       => lambda { @stack << @stack.pop + @stack.pop }, 
+      "-"       => lambda { @stack << -@stack.pop + @stack.pop }, 
+      "*"       => lambda { @stack << @stack.pop * @stack.pop }, 
+      "/"       => lambda { div = @stack.pop; @stack << @stack.pop / div}, 
+      "negate"  => lambda { @stack << -@stack.pop }, 
+      "dup"     => lambda { @stack << @stack.last}, 
     }
   end
 

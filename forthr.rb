@@ -4,7 +4,7 @@ class ForthR
     @output = []
     @words = {
       ".s"   => lambda { @output << @stack.join(" ") },
-      "."    => lambda { @stack.pop }, 
+      "."    => lambda { @output << @stack.pop }, 
       "dup"  => lambda { @stack << @stack.last}, 
     }
   end
@@ -14,7 +14,11 @@ class ForthR
       if @words[command]
         @words[command].call
       else
-        @stack << command
+        begin
+          @stack << Integer(command)
+        rescue
+          raise "Unknown word: #{command}"
+        end
       end
     end
   end

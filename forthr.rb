@@ -18,20 +18,18 @@ class ForthR
 
   def <<(line)
     tokenize(line).each do |command|
-      if @words[command]
-        @words[command].call
-      else
-        begin
-          @s << Integer(command)
-        rescue
-          raise "Unknown word: #{command}"
-        end
-      end
+      @words[command] ? @words[command].call : push(command)
     end
   end
 
   def output
     @out.join("\n")
+  end
+
+  def push(command)
+    @s << Integer(command)
+  rescue
+    raise "Unknown word: #{command}"
   end
 
   def size

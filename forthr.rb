@@ -67,6 +67,11 @@ class ForthR
     result
   end
   
-  def output; @out; end
+  def dump
+    result = @out
+    @out = ""
+    result
+  end
+  
   def size; @s.size; end
 end

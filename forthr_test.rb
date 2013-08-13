@@ -82,6 +82,11 @@ class TestStack < Minitest::Test
     assert_equal "5 6 ", @f.output
   end
 
+  def test_parenthesized_comments
+    @f << "1 2 ( ignore this ) 3 .s"
+    assert_equal "1 2 3 ", @f.output
+  end
+
   def test_stack_size
     @f << "1 2 3"
     assert_equal 3, @f.size

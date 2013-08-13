@@ -22,6 +22,9 @@ class ForthR
                      words = consume_up_to ";"
                      @dictionary[new_word] = lambda { words.each {|w| process w } }
                    },
+      "("       => lambda {
+                     consume_up_to ")"
+                   },
     }
   end
 

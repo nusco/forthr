@@ -26,6 +26,7 @@ class ForthR
                      @definitions[new_word] = code.map {|w| compile w }.flatten
                    },
       "see"     => lambda { @out << decompile(@words.shift) },
+      "bye"     => lambda { exit },
     }
   end
 
@@ -67,7 +68,7 @@ class ForthR
     result
   end
   
-  def dump
+  def read
     result = @out
     @out = ""
     result

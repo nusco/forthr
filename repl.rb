@@ -6,7 +6,7 @@ print '> '
 ARGF.each_line do |line|
   exit if line.downcase == "bye\n"
   interpreter << line
-  result = interpreter.dump
+  result = interpreter.read
   puts result unless result.empty?
   print '> '
 end

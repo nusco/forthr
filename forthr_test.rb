@@ -77,35 +77,43 @@ class TestStack < Minitest::Test
   end
 
   def test_define_word
-    @f << ": SEQUENCE dup 1 + ;"
-    @f << "5 SEQUENCE .s"
+    @f << ": sequence dup 1 + ;"
+    @f << "5 sequence .s"
     assert_equal "5 6 ", @f.output
   end
 
   def test_redefine_word
-    @f << ": DO 1 ;"
-    @f << "DO"
-    @f << ": DO 2 ;"
-    @f << "DO .s"
+    @f << ": do 1 ;"
+    @f << "do"
+    @f << ": do 2 ;"
+    @f << "do .s"
     assert_equal "1 2 ", @f.output
   end
   
-  def test_dynamic_calls
-    # not a real Forth
-    @f << ": DO 1 ;"
-    @f << ": DOTWICE DO DO ;"
-    @f << ": DO 2 ;"
-    @f << "DOTWICE .s"
-    assert_equal "2 2 ", @f.output
+  def test_compiled_calls
+    @f << ": oneone 1 dup ;"
+    @f << ": oneonetwo oneone 2 ;"
+    @f << "oneonetwo"
+    @f << ": oneone 3 ;"
+    @f << "oneonetwo .s"
+    assert_equal "1 1 2 1 1 2 ", @f.output
   end
 
-  def test_parenthesized_comments
-    @f << "1 2 ( ignore this ) 3 .s"
+  def test_see_primitive_word
+    @f << "see drop"
+    assert_equal "<primitive>", @f.output
   end
 
-  def test_parenthesized_comments
-    @f << "1 2 ( ignore this ) 3 .s"
-    assert_equal "1 2 3 ", @f.output
+  def test_see_defined_word
+    @f << ": sequence dup 1 ;"
+    @f << ": longersequence drop sequence + ;"
+    @f << "see longersequence"
+    assert_equal "drop dup 1 + ; ", @f.output
+  end
+
+  def test_see_undefined_word
+    @f << "see 1"
+    assert_equal "<Undefined word: 1>", @f.output
   end
 
   def test_parenthesized_comments
@@ -124,11 +132,11 @@ class TestStack < Minitest::Test
     assert_equal 3, @f.size
   end
 
-  def test_unknown_word
+  def test_undefined_word
     err = assert_raises RuntimeError do
       @f << "1 dup dum ehp"
     end
-    assert_equal "Unknown word: dum", err.message
+    assert_equal "<Undefined word: dum>", err.message
   end
 
   def test_ignore_case

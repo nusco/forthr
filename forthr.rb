@@ -2,54 +2,67 @@ class ForthR
   def initialize
     @s = []
     @out = ""
-    @dictionary = {
+    @definitions = {}
+    @primitives = {
       ".s"      => lambda { @out << "#{@s.join(' ')} " },
-      "."       => lambda { @out << "#{@s.pop} " }, 
-      "+"       => lambda { @s << @s.pop + @s.pop }, 
-      "-"       => lambda { @s << -@s.pop + @s.pop }, 
-      "*"       => lambda { @s << @s.pop * @s.pop }, 
+      "."       => lambda { @out << "#{@s.pop} " },
+      "+"       => lambda { @s << @s.pop + @s.pop },
+      "-"       => lambda { @s << -@s.pop + @s.pop },
+      "*"       => lambda { @s << @s.pop * @s.pop },
       "/"       => lambda { y, x = @s.pop, @s.pop; @s << x / y },
-      "negate"  => lambda { @s << -@s.pop }, 
+      "negate"  => lambda { @s << -@s.pop },
       "mod"     => lambda { y, x = @s.pop, @s.pop; @s << x % y },
-      "/mod"    => lambda { y, x = @s.pop, @s.pop; @s << x % y << x / y }, 
-      "dup"     => lambda { @s << @s.last}, 
-      "drop"    => lambda { @s.pop }, 
-      "swap"    => lambda { y, x = @s.pop, @s.pop; @s << y << x }, 
-      "nip"     => lambda { y, x = @s.pop, @s.pop; @s << y }, 
-      "tuck"    => lambda { y, x = @s.pop, @s.pop; @s << y << x << y }, 
+      "/mod"    => lambda { y, x = @s.pop, @s.pop; @s << x % y << x / y },
+      "dup"     => lambda { @s << @s.last},
+      "drop"    => lambda { @s.pop },
+      "swap"    => lambda { y, x = @s.pop, @s.pop; @s << y << x },
+      "nip"     => lambda { y, x = @s.pop, @s.pop; @s << y },
+      "tuck"    => lambda { y, x = @s.pop, @s.pop; @s << y << x << y },
       "("       => lambda { consume_until ")" },
       "\\"      => lambda { @words.clear },
       ":"       => lambda {
                      new_word = @words.shift.downcase
-                     words = consume_until ";"
-                     @dictionary[new_word] = lambda { words.each {|w| process w } }
+                     code = consume_until ";"
+                     @definitions[new_word] = code.map {|w| compile w }.flatten
                    },
+      "see"     => lambda { @out << decompile(@words.shift) },
     }
   end
 
-  def execute_code(line)
+  def <<(line)
     @words = line.split(" ")
     process @words.shift until @words.empty?
   end
 
-  alias_method :<<, :execute_code
-
   def process(word)
     word = word.downcase
-    if @dictionary[word]
-      @dictionary[word].call
+    if @definitions[word]
+      @definitions[word].each {|w| process w }
+    elsif @primitives[word]
+      @primitives[word].call
     else
       begin
         @s << Integer(word)
       rescue
-        raise "Unknown word: #{word}"
+        raise "<Undefined word: #{word}>"
       end
     end
   end
 
+  def compile(word)
+    return @definitions[word].map {|w| compile w }.flatten if @definitions[word]
+    word
+  end
+
+  def decompile(word)
+    return "#{@definitions[word].join(' ')} ; " if @definitions[word]
+    return "<primitive>" if @primitives[word]
+    "<Undefined word: #{word}>"
+  end
+  
   def consume_until(terminator)
     result = []
-    result << @words.shift until @words[0] == terminator
+    result << @words.shift until @words.first == terminator
     @words.shift
     result
   end

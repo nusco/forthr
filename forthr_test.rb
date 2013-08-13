@@ -82,9 +82,41 @@ class TestStack < Minitest::Test
     assert_equal "5 6 ", @f.output
   end
 
+  def test_redefine_word
+    @f << ": DO 1 ;"
+    @f << "DO"
+    @f << ": DO 2 ;"
+    @f << "DO .s"
+    assert_equal "1 2 ", @f.output
+  end
+  
+  def test_dynamic_calls
+    # not a real Forth
+    @f << ": DO 1 ;"
+    @f << ": DOTWICE DO DO ;"
+    @f << ": DO 2 ;"
+    @f << "DOTWICE .s"
+    assert_equal "2 2 ", @f.output
+  end
+
+  def test_parenthesized_comments
+    @f << "1 2 ( ignore this ) 3 .s"
+  end
+
   def test_parenthesized_comments
     @f << "1 2 ( ignore this ) 3 .s"
     assert_equal "1 2 3 ", @f.output
+  end
+
+  def test_parenthesized_comments
+    @f << "1 2 ( ignore this ) 3 .s"
+    assert_equal "1 2 3 ", @f.output
+  end
+
+  def test_backslashed_comments
+    @f << "1 2 \\ ignore this"
+    @f << ".s"
+    assert_equal "1 2 ", @f.output
   end
 
   def test_stack_size
@@ -99,13 +131,18 @@ class TestStack < Minitest::Test
     assert_equal "Unknown word: dum", err.message
   end
 
-  def test_case_insensitivity
+  def test_ignore_case
     @f << "1 DUP dUp .S .s"
     assert_equal "1 1 1 1 1 1 ", @f.output
   end
     
-  def test_ignoring_spaces
+  def test_ignore_spaces
     @f << " 1  2    3  "
     assert_equal 3, @f.size
+  end
+
+  def test_ignore_newlines
+    @f << "1 2 \n 3 .s"
+    assert_equal "1 2 3 ", @f.output
   end
 end    

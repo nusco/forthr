@@ -17,13 +17,12 @@ class ForthR
       "swap"    => lambda { y, x = @s.pop, @s.pop; @s << y << x }, 
       "nip"     => lambda { y, x = @s.pop, @s.pop; @s << y }, 
       "tuck"    => lambda { y, x = @s.pop, @s.pop; @s << y << x << y }, 
+      "("       => lambda { consume_until ")" },
+      "\\"      => lambda { @words.clear },
       ":"       => lambda {
                      new_word = @words.shift.downcase
-                     words = consume_up_to ";"
+                     words = consume_until ";"
                      @dictionary[new_word] = lambda { words.each {|w| process w } }
-                   },
-      "("       => lambda {
-                     consume_up_to ")"
                    },
     }
   end
@@ -48,18 +47,13 @@ class ForthR
     end
   end
 
-  def consume_up_to(word)
+  def consume_until(terminator)
     result = []
-    result << @words.shift until @words[0] == word
+    result << @words.shift until @words[0] == terminator
     @words.shift
     result
   end
   
-  def output
-    @out
-  end
-
-  def size
-    @s.size
-  end
+  def output; @out; end
+  def size; @s.size; end
 end

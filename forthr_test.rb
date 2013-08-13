@@ -76,6 +76,12 @@ class TestStack < Minitest::Test
     assert_equal "1 3 2 3 ", @f.output
   end
 
+  def test_define_word
+    @f << ": SEQUENCE dup 1 + ;"
+    @f << "5 SEQUENCE .s"
+    assert_equal "5 6 ", @f.output
+  end
+
   def test_stack_size
     @f << "1 2 3"
     assert_equal 3, @f.size

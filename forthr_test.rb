@@ -1,4 +1,5 @@
 require 'minitest/autorun'
+require 'pry-rescue/minitest'
 require './forthr'
 
 class TestStack < Minitest::Test

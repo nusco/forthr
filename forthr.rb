@@ -1,34 +1,41 @@
+require 'method_source'
+
 class ForthR
+  Stack = []
+
   def initialize
-    @s = []
     @out = ""
-    @words = {
-      ".s"      => Word.new(".s")     { @out << "#{@s.join(' ')} " },
-      "."       => Word.new(".")      { @out << "#{@s.pop} " },
-      "+"       => Word.new("+")      { @s << @s.pop + @s.pop },
-      "-"       => Word.new("-")      { @s << -@s.pop + @s.pop },
-      "*"       => Word.new("*")      { @s << @s.pop * @s.pop },
-      "/"       => Word.new("/")      { y, x = @s.pop, @s.pop; @s << x / y },
-      "negate"  => Word.new("negate") { @s << -@s.pop },
-      "mod"     => Word.new("mod")    { y, x = @s.pop, @s.pop; @s << x % y },
-      "/mod"    => Word.new("/mod")   { y, x = @s.pop, @s.pop; @s << x % y << x / y },
-      "dup"     => Word.new("dup")    { @s << @s.last},
-      "drop"    => Word.new("drop")   { @s.pop },
-      "swap"    => Word.new("swap")   { y, x = @s.pop, @s.pop; @s << y << x },
-      "nip"     => Word.new("nip")    { y, x = @s.pop, @s.pop; @s << y },
-      "tuck"    => Word.new("tuck")   { y, x = @s.pop, @s.pop; @s << y << x << y },
-      "("       => Word.new("(")      { consume_until ")" },
-      "\\"      => Word.new("\\")     { @code.clear },
-      ":"       => Word.new(":")      {
-                     defined_word = @code.shift.downcase
-                     code = consume_until ";"
-                     expanded_code = code.map {|w| compile w }.flatten
-                     definition = CompositeWord.new(expanded_code, method(:process))
-                     @words[defined_word] = definition
-                   },
-      "see"     => Word.new("see")  { @out << decompile(@code.shift) },
-      "bye"     => Word.new("bye")  { exit },
+    primitives = {
+      ".s"     => lambda { @out << "#{Stack.join(' ')} " },
+      "."      => lambda { @out << "#{Stack.pop} " },
+      "+"      => lambda { Stack << Stack.pop + Stack.pop },
+      "-"      => lambda { Stack << -Stack.pop + Stack.pop },
+      "*"      => lambda { Stack << Stack.pop * Stack.pop },
+      "/"      => lambda { y, x = Stack.pop, Stack.pop; Stack << x / y },
+      "negate" => lambda { Stack << -Stack.pop },
+      "mod"    => lambda { y, x = Stack.pop, Stack.pop; Stack << x % y },
+      "/mod"   => lambda { y, x = Stack.pop, Stack.pop; Stack << x % y << x / y },
+      "dup"    => lambda { Stack << Stack.last},
+      "drop"   => lambda { Stack.pop },
+      "swap"   => lambda { y, x = Stack.pop, Stack.pop; Stack << y << x },
+      "nip"    => lambda { y, x = Stack.pop, Stack.pop; Stack << y },
+      "tuck"   => lambda { y, x = Stack.pop, Stack.pop; Stack << y << x << y },
+      "("      => lambda { consume_until ")" },
+      "\\"     => lambda { @code.clear },
+
+      ":"      => lambda do
+        defined_word = @code.shift.downcase
+        code = consume_until ";"
+        expanded_code = code.map {|w| compile w }.flatten
+        definition = CompositeWord.new(expanded_code, method(:process))
+        @words[defined_word] = definition
+      end,
+
+      "see"     => lambda { @out << decompile(@code.shift) },
+      "bye"     => lambda { exit }
     }
+
+    @words = Words.new primitives.each {|name,lambda| primitives[name] = Word.new(name, &lambda) }
   end
 
   def <<(line)
@@ -38,15 +45,7 @@ class ForthR
 
   def process(word)
     word = word.downcase
-    if @words[word]
-      @words[word].call
-    else
-      begin
-        @s << Integer(word)
-      rescue
-        raise "<Undefined word: #{word}>"
-      end
-    end
+    @words[word].call
   end
 
   def compile(word)
@@ -55,11 +54,8 @@ class ForthR
   end
 
   def decompile(word)
-    test_word = @words[word]
-    return test_word.decompile if test_word.class == CompositeWord
-    return "<Undefined word: #{word}>" unless test_word
-
-    "<primitive>"
+    return @words[word].to_s if @words[word]
+    "<Undefined word: #{word}>"
   end
 
   def consume_until(terminator)
@@ -75,21 +71,23 @@ class ForthR
     result
   end
 
-  def size; @s.size; end
+  def size; Stack.size; end
 
   class Word < Proc
+    attr_reader :block
+
     def initialize(name, &block)
       @name = name
+      @block = block
       super &block
     end
 
-    def decompile
-      "<Undefined word: #{to_s}>"
+    def to_s
+      "<primitive>: #{block.source_location.join(":")}"
     end
   end
 
   class CompositeWord < Struct.new(:expanded_code, :process)
-
     include Enumerable
 
     def each(&block)
@@ -100,12 +98,42 @@ class ForthR
       expanded_code.join(*args)
     end
 
-    def decompile
-      expanded_code.join(" ") + " ; "
+    def to_s
+      join(" ") + " ; "
     end
 
     def call
       expanded_code.each {|w| process.call w }
+    end
+  end
+
+  class UndefinedWord < Struct.new(:name)
+    def to_s
+      ":#{name}: <Undefined word>"
+    end
+
+    def call
+      begin
+        Stack << Integer(name)
+      rescue
+        raise to_s
+      end
+    end
+  end
+
+  class Words < Struct.new(:dictionary)
+    include Enumerable
+
+    def [](key)
+      dictionary.fetch(key) { UndefinedWord.new(key) }
+    end
+
+    def []=(key,value)
+      dictionary[key] = value
+    end
+
+    def each(&block)
+      dictionary.each &block
     end
   end
 end

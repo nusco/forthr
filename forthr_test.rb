@@ -5,13 +5,14 @@ require './forthr'
 class TestStack < Minitest::Test
   def setup
     @f = ForthR.new
+    ForthR::Stack.clear
   end
 
   def test_dot_s
     @f << ".s 1 2 .s 3 .s"
     assert_equal " 1 2 1 2 3 ", @f.read
   end
-  
+
   def test_dot
     @f << "1 2 3 . . .s"
     assert_equal "3 2 1 ", @f.read
@@ -90,7 +91,7 @@ class TestStack < Minitest::Test
     @f << "do .s"
     assert_equal "1 2 ", @f.read
   end
-  
+
   def test_compiled_calls
     @f << ": oneone 1 dup ;"
     @f << ": oneonetwo oneone 2 ;"
@@ -102,7 +103,7 @@ class TestStack < Minitest::Test
 
   def test_see_primitive_word
     @f << "see drop"
-    assert_equal "<primitive>", @f.read
+    assert_match /^<primitive>/, @f.read
   end
 
   def test_see_defined_word
@@ -114,7 +115,7 @@ class TestStack < Minitest::Test
 
   def test_see_undefined_word
     @f << "see 1"
-    assert_equal "<Undefined word: 1>", @f.read
+    assert_equal ":1: <Undefined word>", @f.read
   end
 
   def test_parenthesized_comments
@@ -137,14 +138,14 @@ class TestStack < Minitest::Test
     err = assert_raises RuntimeError do
       @f << "1 dup dum ehp"
     end
-    assert_equal "<Undefined word: dum>", err.message
+    assert_equal ":dum: <Undefined word>", err.message
   end
 
   def test_ignore_case
     @f << "1 DUP dUp .S .s"
     assert_equal "1 1 1 1 1 1 ", @f.read
   end
-    
+
   def test_ignore_spaces
     @f << " 1  2    3  "
     assert_equal 3, @f.size
@@ -163,4 +164,4 @@ class TestStack < Minitest::Test
     @f << ".s"
     assert_equal "1 2 3 ", @f.read
   end
-end    
+end

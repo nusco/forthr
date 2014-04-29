@@ -1,11 +1,12 @@
 require 'minitest/autorun'
-require 'pry-rescue/minitest'
+require "minitest/reporters"
+Minitest::Reporters.use!
+
 require './forthr'
 
 class TestStack < Minitest::Test
   def setup
     @f = ForthR.new
-    ForthR::Stack.clear
   end
 
   def test_dot_s
@@ -93,6 +94,7 @@ class TestStack < Minitest::Test
   end
 
   def test_compiled_calls
+    skip("Discussion about dynamism")
     @f << ": oneone 1 dup ;"
     @f << ": oneonetwo oneone 2 ;"
     @f << "oneonetwo"
@@ -110,7 +112,7 @@ class TestStack < Minitest::Test
     @f << ": sequence dup 1 ;"
     @f << ": longersequence drop sequence + ;"
     @f << "see longersequence"
-    assert_equal "drop dup 1 + ; ", @f.read
+    assert_equal "drop sequence + ; ", @f.read
   end
 
   def test_see_undefined_word

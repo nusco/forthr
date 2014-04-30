@@ -94,7 +94,6 @@ class TestStack < Minitest::Test
   end
 
   def test_compiled_calls
-    skip("Discussion about dynamism")
     @f << ": oneone 1 dup ;"
     @f << ": oneonetwo oneone 2 ;"
     @f << "oneonetwo"

@@ -36,9 +36,9 @@ class ForthR
     @words[word.downcase].call @words, @stack
   end
 
-  def define_word(code,words)
+  def define_word(code, words)
     name = code.shift.downcase
-    words[name] = CompositeWord.new name, consume_until(";")
+    words[name] = CompositeWord.new name, consume_until(";"), words
   end
 
   def consume_until(terminator)
@@ -65,7 +65,7 @@ class ForthR
       super &block
     end
 
-    def expand(*)
+    def expand
       name
     end
 
@@ -78,9 +78,14 @@ class ForthR
     end
   end
 
-  class CompositeWord < Struct.new(:name, :code)
+  class CompositeWord < Struct.new(:name, :code, :expanded_code)
     include Enumerable
 
+    def initialize(name, code, words)
+      expanded_code = code.map {|word| words[word].expand }.flatten
+      super name, code, expanded_code
+    end
+    
     def each(&block)
       code.each &block
     end
@@ -89,8 +94,8 @@ class ForthR
       code.join(*args)
     end
 
-    def expand(words)
-      code.map {|word| words[word].expand(words) }.flatten
+    def expand
+      expanded_code
     end
 
     def to_s
@@ -102,7 +107,7 @@ class ForthR
     end
 
     def call(words, stack)
-      expand(words).each do |word|
+      expanded_code.each do |word|
         words[word].call words, stack
       end
     end
@@ -113,7 +118,7 @@ class ForthR
       ":#{name}: <Undefined word>"
     end
 
-    def expand(*)
+    def expand
       name
     end
 

@@ -200,4 +200,12 @@ class TestStack < Minitest::Test
     @f << "see foo"
     assert_equal "Variable foo", @f.read
   end
+
+  def test_variable_expand
+    @f << "variable foo"
+    @f << ": new_foo foo ! ;"
+    @f << "1 new_foo"
+    @f << "foo @ ."
+    assert_equal "1 ", @f.read
+  end
 end

@@ -1,5 +1,8 @@
 module ForthR
-  class Interpreter < Struct.new(:words, :stack, :out, :code, :lookup_table)
+  class Interpreter < Struct.new(:words, :stack, :out, :code)
+
+    attr_accessor :last_word
+
     def initialize
       primitives = {
         ".s"       => Proc.new { out << "#{stack.join(' ')} "                         },
@@ -19,13 +22,14 @@ module ForthR
         "("        => Proc.new { code.consume_until ")"                               },
         "\\"       => Proc.new { code.clear                                           },
         ":"        => Proc.new { define_word code, words                              },
-        "variable" => Proc.new { lookup_table[code.shift.downcase] = nil              },
+        "variable" => Proc.new { define_variable(code, words)                         },
         "see"      => Proc.new { out << words[code.shift].see(words)                  },
         "bye"      => Proc.new { exit                                                 },
+        "!"        => Proc.new {  words[last_word].value = stack.pop                  },
+        "@"        => Proc.new { stack << words[last_word].value                      },
       }
 
       self.words = Words.new primitives.merge(primitives) {|name, lambda| PrimitiveWord.new(name, &lambda) }
-      self.lookup_table = {}
       self.stack = []
       self.out = ""
       self.code = Code.new
@@ -36,23 +40,19 @@ module ForthR
       words[name] = CompositeWord.new(name, code.consume_until(";"), words)
     end
 
+    def define_variable(code, words)
+      self.last_word = code.shift.downcase
+      words[last_word]= VariableWord.new(self, last_word)
+    end
+
     def <<(line)
       self.code = Code.new line
       call code.shift until code.empty?
     end
 
+
     def call(word)
-      if lookup_table.key? word
-
-        if (code.first == "!" && code.shift)
-          lookup_table[word] = stack.pop
-        elsif (code.first == "@" && code.shift)
-          stack << lookup_table.fetch(word)
-        end
-
-      else
-        words[word.downcase].call self
-      end
+      words[word.downcase].call self
     end
 
     def read
@@ -150,6 +150,22 @@ module ForthR
 
     def see(*)
       ":#{name}: <Undefined word>"
+    end
+  end
+
+  class VariableWord < Struct.new(:state, :name)
+    attr_accessor :value
+
+    def call(*)
+      state.last_word = name
+    end
+
+    def see(*)
+      "Variable #{name}"
+    end
+
+    def expand(*)
+      value.to_s
     end
   end
 

@@ -179,13 +179,13 @@ class TestStack < Minitest::Test
 
   def test_variable_declaration
     @f << "variable foo"
-    assert_equal nil, @f.lookup_table.fetch("foo")
+    assert_equal nil, @f.words["foo"].value
   end
 
   def test_variable_set
     @f << "variable foo"
     @f << "2 foo ! .s"
-    assert_equal 2, @f.lookup_table.fetch("foo")
+    assert_equal 2, @f.words["foo"].value
   end
 
   def test_variable_fetch
@@ -193,5 +193,11 @@ class TestStack < Minitest::Test
     @f << "2 foo !"
     @f << "foo @ ."
     assert_equal "2 ", @f.read
+  end
+
+  def test_variable_see
+    @f << "variable foo"
+    @f << "see foo"
+    assert_equal "Variable foo", @f.read
   end
 end

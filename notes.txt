@@ -1,0 +1,4 @@
+I'm implementing Forth by following the Gforth tutorial (section 3 in the manual, at http://www.complang.tuwien.ac.at/forth/gforth/Docs-html/Tutorial.html#Tutorial). So far, I implemented most features described until 3.8 (comments tutorial)
+
+Stuff that I didn't implement, and I might implement in the future:
+3.7 - Using files for Forth code

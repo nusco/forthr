@@ -133,7 +133,7 @@ module ForthR
     end
 
     def expand
-      name
+      raise to_s
     end
 
     def to_s

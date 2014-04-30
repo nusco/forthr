@@ -102,6 +102,12 @@ class TestStack < Minitest::Test
     assert_equal "1 1 2 1 1 2 ", @f.read
   end
 
+  def test_unknown_words_do_not_compile
+    err = assert_raises RuntimeError do
+      @f << ": wrong blah ;"
+    end
+  end
+
   def test_see_primitive_word
     @f << "see drop"
     assert_match /^<primitive>/, @f.read
@@ -115,6 +121,11 @@ class TestStack < Minitest::Test
   end
 
   def test_see_undefined_word
+    @f << "see blah"
+    assert_equal ":blah: <Undefined word>", @f.read
+  end
+
+  def test_see_integer
     @f << "see 1"
     assert_equal ":1: <Undefined word>", @f.read
   end

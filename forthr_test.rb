@@ -6,7 +6,7 @@ require './forthr'
 
 class TestStack < Minitest::Test
   def setup
-    @f = ForthR.new
+    @f = ForthR::Interpreter.new
   end
 
   def test_dot_s

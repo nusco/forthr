@@ -1,29 +1,31 @@
 module ForthR
-  class Interpreter < Struct.new(:words, :stack, :out, :code)
+  class Interpreter < Struct.new(:words, :stack, :out, :code, :lookup_table)
     def initialize
       primitives = {
-        ".s"     => Proc.new { out << "#{stack.join(' ')} "                         },
-        "."      => Proc.new { out << "#{stack.pop} "                               },
-        "+"      => Proc.new { stack << stack.pop + stack.pop                       },
-        "-"      => Proc.new { stack << -stack.pop + stack.pop                      },
-        "*"      => Proc.new { stack << stack.pop * stack.pop                       },
-        "/"      => Proc.new { y, x = stack.pop, stack.pop; stack << x / y          },
-        "negate" => Proc.new { stack << -stack.pop                                  },
-        "mod"    => Proc.new { y, x = stack.pop, stack.pop; stack << x % y          },
-        "/mod"   => Proc.new { y, x = stack.pop, stack.pop; stack << x % y << x / y },
-        "dup"    => Proc.new { stack << stack.last                                  },
-        "drop"   => Proc.new { stack.pop                                            },
-        "swap"   => Proc.new { y, x = stack.pop, stack.pop; stack << y << x         },
-        "nip"    => Proc.new { y, x = stack.pop, stack.pop; stack << y              },
-        "tuck"   => Proc.new { y, x = stack.pop, stack.pop; stack << y << x << y    },
-        "("      => Proc.new { code.consume_until ")"                               },
-        "\\"     => Proc.new { code.clear                                           },
-        ":"      => Proc.new { define_word code, words                              },
-        "see"    => Proc.new { out << words[code.shift].see(words)                  },
-        "bye"    => Proc.new { exit                                                 },
+        ".s"       => Proc.new { out << "#{stack.join(' ')} "                         },
+        "."        => Proc.new { out << "#{stack.pop} "                               },
+        "+"        => Proc.new { stack << stack.pop + stack.pop                       },
+        "-"        => Proc.new { stack << -stack.pop + stack.pop                      },
+        "*"        => Proc.new { stack << stack.pop * stack.pop                       },
+        "/"        => Proc.new { y, x = stack.pop, stack.pop; stack << x / y          },
+        "negate"   => Proc.new { stack << -stack.pop                                  },
+        "mod"      => Proc.new { y, x = stack.pop, stack.pop; stack << x % y          },
+        "/mod"     => Proc.new { y, x = stack.pop, stack.pop; stack << x % y << x / y },
+        "dup"      => Proc.new { stack << stack.last                                  },
+        "drop"     => Proc.new { stack.pop                                            },
+        "swap"     => Proc.new { y, x = stack.pop, stack.pop; stack << y << x         },
+        "nip"      => Proc.new { y, x = stack.pop, stack.pop; stack << y              },
+        "tuck"     => Proc.new { y, x = stack.pop, stack.pop; stack << y << x << y    },
+        "("        => Proc.new { code.consume_until ")"                               },
+        "\\"       => Proc.new { code.clear                                           },
+        ":"        => Proc.new { define_word code, words                              },
+        "variable" => Proc.new { lookup_table[code.shift.downcase] = nil              },
+        "see"      => Proc.new { out << words[code.shift].see(words)                  },
+        "bye"      => Proc.new { exit                                                 },
       }
-      
+
       self.words = Words.new primitives.merge(primitives) {|name, lambda| PrimitiveWord.new(name, &lambda) }
+      self.lookup_table = {}
       self.stack = []
       self.out = ""
       self.code = Code.new
@@ -40,7 +42,17 @@ module ForthR
     end
 
     def call(word)
-      words[word.downcase].call self
+      if lookup_table.key? word
+
+        if (code.first == "!" && code.shift)
+          lookup_table[word] = stack.pop
+        elsif (code.first == "@" && code.shift)
+          stack << lookup_table.fetch(word)
+        end
+
+      else
+        words[word.downcase].call self
+      end
     end
 
     def read
@@ -55,14 +67,14 @@ module ForthR
     def initialize(line = "")
       super line.split(" ")
     end
-    
+
     def consume_until(terminator)
       result = []
       result << shift until result.last == terminator
       result[0..-2]
     end
   end
-  
+
   class PrimitiveWord < Proc
     attr_reader :block, :name
 
@@ -113,7 +125,7 @@ module ForthR
     def initialize(string)
       self.number = Integer(string)
     end
-    
+
     def call(state)
       state.stack << number
     end
@@ -121,7 +133,7 @@ module ForthR
     def expand
       number.to_s
     end
-    
+
     def see(*)
       ":#{number.to_s}: <Undefined word>"
     end
@@ -140,7 +152,7 @@ module ForthR
       ":#{name}: <Undefined word>"
     end
   end
-  
+
   class Words < Struct.new(:dictionary)
     include Enumerable
 
@@ -158,8 +170,8 @@ module ForthR
     end
 
     private
-    
-    def is_numeric?(value) 
+
+    def is_numeric?(value)
       value.match /\A[+-]?\d+?(\.\d+)?\Z/
     end
   end

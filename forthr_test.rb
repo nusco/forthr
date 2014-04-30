@@ -176,4 +176,22 @@ class TestStack < Minitest::Test
     @f << ".s"
     assert_equal "1 2 3 ", @f.read
   end
+
+  def test_variable_declaration
+    @f << "variable foo"
+    assert_equal nil, @f.lookup_table.fetch("foo")
+  end
+
+  def test_variable_set
+    @f << "variable foo"
+    @f << "2 foo ! .s"
+    assert_equal 2, @f.lookup_table.fetch("foo")
+  end
+
+  def test_variable_fetch
+    @f << "variable foo"
+    @f << "2 foo !"
+    @f << "foo @ ."
+    assert_equal "2 ", @f.read
+  end
 end

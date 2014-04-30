@@ -38,7 +38,7 @@ class ForthR
 
   def define_word(code, words)
     name = code.shift.downcase
-    words[name] = CompositeWord.new name, consume_until(";"), words
+    words[name] = CompositeWord.new(name, consume_until(";"), words)
   end
 
   def consume_until(terminator)
@@ -49,8 +49,7 @@ class ForthR
   end
 
   def read
-    result = @out
-    @out = ""
+    result, @out = @out, ""
     result
   end
 
@@ -62,7 +61,6 @@ class ForthR
     def initialize(name, &block)
       @name = name
       @block = block
-      super &block
     end
 
     def expand
@@ -94,6 +92,12 @@ class ForthR
       code.join(*args)
     end
 
+    def call(words, stack)
+      expanded_code.each do |word|
+        words[word].call words, stack
+      end
+    end
+
     def expand
       expanded_code
     end
@@ -105,29 +109,23 @@ class ForthR
     def show(words)
       words[name].to_s
     end
-
-    def call(words, stack)
-      expanded_code.each do |word|
-        words[word].call words, stack
-      end
-    end
   end
 
   class UndefinedWord < Struct.new(:name)
-    def to_s
-      ":#{name}: <Undefined word>"
-    end
-
-    def expand
-      name
-    end
-
     def call(words, stack)
       begin
         stack << Integer(name)
       rescue
         raise to_s
       end
+    end
+
+    def expand
+      name
+    end
+
+    def to_s
+      ":#{name}: <Undefined word>"
     end
 
     def show(*)

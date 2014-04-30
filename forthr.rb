@@ -23,7 +23,7 @@ module ForthR
         "bye"    => Proc.new { exit                                                 },
       }
       
-      self.words = Words.new primitives.merge(primitives) {|name, lambda| Word.new(name, &lambda) }
+      self.words = Words.new primitives.merge(primitives) {|name, lambda| PrimitiveWord.new(name, &lambda) }
       self.stack = []
       self.out = ""
       self.code = Code.new
@@ -63,7 +63,7 @@ module ForthR
     end
   end
   
-  class Word < Proc
+  class PrimitiveWord < Proc
     attr_reader :block, :name
 
     def initialize(name, &block)

@@ -129,19 +129,15 @@ module ForthR
 
   class UndefinedWord < Struct.new(:name)
     def call(state)
-      raise to_s
+      raise see
     end
 
     def expand
-      raise to_s
-    end
-
-    def to_s
-      ":#{name}: <Undefined word>"
+      raise see
     end
 
     def see(*)
-      to_s
+      ":#{name}: <Undefined word>"
     end
   end
   

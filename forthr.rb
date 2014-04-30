@@ -19,7 +19,7 @@ module ForthR
         "("      => Proc.new { code.consume_until ")"                               },
         "\\"     => Proc.new { code.clear                                           },
         ":"      => Proc.new { define_word code, words                              },
-        "see"    => Proc.new { out << words[code.shift].show(words)                 },
+        "see"    => Proc.new { out << words[code.shift].see(words)                  },
         "bye"    => Proc.new { exit                                                 },
       }
       
@@ -79,7 +79,7 @@ module ForthR
       "<primitive>: #{block.source_location.join(":")}"
     end
 
-    def show(*)
+    def see(*)
       to_s
     end
   end
@@ -104,18 +104,32 @@ module ForthR
       code.join(" ") + " ; "
     end
 
-    def show(words)
+    def see(words)
       words[name].to_s
+    end
+  end
+
+  class NumericWord < Struct.new(:number)
+    def initialize(string)
+      self.number = Integer(string)
+    end
+    
+    def call(state)
+      state.stack << number
+    end
+
+    def expand
+      number.to_s
+    end
+    
+    def see(*)
+      ":#{number.to_s}: <Undefined word>"
     end
   end
 
   class UndefinedWord < Struct.new(:name)
     def call(state)
-      begin
-        state.stack << Integer(name)
-      rescue
-        raise to_s
-      end
+      raise to_s
     end
 
     def expand
@@ -126,28 +140,31 @@ module ForthR
       ":#{name}: <Undefined word>"
     end
 
-    def show(*)
+    def see(*)
       to_s
     end
   end
-
+  
   class Words < Struct.new(:dictionary)
     include Enumerable
 
     def [](key)
-      begin
-        return Integer(name)
-      rescue
-        dictionary.fetch(key) { UndefinedWord.new(key) }
-      end
+      return NumericWord.new(key) if is_numeric? key
+      dictionary.fetch(key) { UndefinedWord.new(key) }
     end
 
-    def []=(key,value)
+    def []=(key, value)
       dictionary[key] = value
     end
 
     def each(&block)
       dictionary.each &block
+    end
+
+    private
+    
+    def is_numeric?(value) 
+      value.match /\A[+-]?\d+?(\.\d+)?\Z/
     end
   end
 end

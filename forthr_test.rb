@@ -176,4 +176,14 @@ class TestStack < Minitest::Test
     @f << ".s"
     assert_equal "1 2 3 ", @f.read
   end
+
+  def test_false
+    @f << "false .s"
+    assert_equal "0 ", @f.read
+  end
+
+  def test_true
+    @f << "true .s"
+    assert_equal "-1 ", @f.read
+  end
 end

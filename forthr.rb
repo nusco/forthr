@@ -20,9 +20,11 @@ module ForthR
         "\\"     => Proc.new { code.clear                                           },
         ":"      => Proc.new { define_word code, words                              },
         "see"    => Proc.new { out << words[code.shift].see(words)                  },
+        "false"  => Proc.new { stack << 0                                           },
+        "true"   => Proc.new { stack << -1                                          },
         "bye"    => Proc.new { exit                                                 },
       }
-      
+
       self.words = Words.new primitives.merge(primitives) {|name, lambda| PrimitiveWord.new(name, &lambda) }
       self.stack = []
       self.out = ""
@@ -55,14 +57,14 @@ module ForthR
     def initialize(line = "")
       super line.split(" ")
     end
-    
+
     def consume_until(terminator)
       result = []
       result << shift until result.last == terminator
       result[0..-2]
     end
   end
-  
+
   class PrimitiveWord < Proc
     attr_reader :block, :name
 
@@ -113,7 +115,7 @@ module ForthR
     def initialize(string)
       self.number = Integer(string)
     end
-    
+
     def call(state)
       state.stack << number
     end
@@ -121,7 +123,7 @@ module ForthR
     def expand
       number.to_s
     end
-    
+
     def see(*)
       ":#{number.to_s}: <Undefined word>"
     end
@@ -140,7 +142,7 @@ module ForthR
       ":#{name}: <Undefined word>"
     end
   end
-  
+
   class Words < Struct.new(:dictionary)
     include Enumerable
 
@@ -158,8 +160,8 @@ module ForthR
     end
 
     private
-    
-    def is_numeric?(value) 
+
+    def is_numeric?(value)
       value.match /\A[+-]?\d+?(\.\d+)?\Z/
     end
   end

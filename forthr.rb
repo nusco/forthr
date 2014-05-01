@@ -1,5 +1,8 @@
 module ForthR
   class Interpreter < Struct.new(:words, :stack, :out, :code)
+    FALSE = 0
+    TRUE = -1
+
     def initialize
       primitives = {
         ".s"     => Proc.new { out << "#{stack.join(' ')} "                         },
@@ -20,8 +23,9 @@ module ForthR
         "\\"     => Proc.new { code.clear                                           },
         ":"      => Proc.new { define_word code, words                              },
         "see"    => Proc.new { out << words[code.shift].see(words)                  },
-        "false"  => Proc.new { stack << 0                                           },
-        "true"   => Proc.new { stack << -1                                          },
+        "false"  => Proc.new { stack << FALSE                                       },
+        "true"   => Proc.new { stack << TRUE                                        },
+        "="      => Proc.new { stack << (stack.pop == stack.pop ? TRUE : FALSE)     },
         "bye"    => Proc.new { exit                                                 },
       }
 

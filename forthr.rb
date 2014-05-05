@@ -1,28 +1,34 @@
 module ForthR
   class Interpreter < Struct.new(:words, :stack, :out, :code)
+
+    attr_accessor :last_word
+
     def initialize
       primitives = {
-        ".s"     => Proc.new { out << "#{stack.join(' ')} "                         },
-        "."      => Proc.new { out << "#{stack.pop} "                               },
-        "+"      => Proc.new { stack << stack.pop + stack.pop                       },
-        "-"      => Proc.new { stack << -stack.pop + stack.pop                      },
-        "*"      => Proc.new { stack << stack.pop * stack.pop                       },
-        "/"      => Proc.new { y, x = stack.pop, stack.pop; stack << x / y          },
-        "negate" => Proc.new { stack << -stack.pop                                  },
-        "mod"    => Proc.new { y, x = stack.pop, stack.pop; stack << x % y          },
-        "/mod"   => Proc.new { y, x = stack.pop, stack.pop; stack << x % y << x / y },
-        "dup"    => Proc.new { stack << stack.last                                  },
-        "drop"   => Proc.new { stack.pop                                            },
-        "swap"   => Proc.new { y, x = stack.pop, stack.pop; stack << y << x         },
-        "nip"    => Proc.new { y, x = stack.pop, stack.pop; stack << y              },
-        "tuck"   => Proc.new { y, x = stack.pop, stack.pop; stack << y << x << y    },
-        "("      => Proc.new { code.consume_until ")"                               },
-        "\\"     => Proc.new { code.clear                                           },
-        ":"      => Proc.new { define_word code, words                              },
-        "see"    => Proc.new { out << words[code.shift].see(words)                  },
-        "bye"    => Proc.new { exit                                                 },
+        ".s"       => Proc.new { out << "#{stack.join(' ')} "                         },
+        "."        => Proc.new { out << "#{stack.pop} "                               },
+        "+"        => Proc.new { stack << stack.pop + stack.pop                       },
+        "-"        => Proc.new { stack << -stack.pop + stack.pop                      },
+        "*"        => Proc.new { stack << stack.pop * stack.pop                       },
+        "/"        => Proc.new { y, x = stack.pop, stack.pop; stack << x / y          },
+        "negate"   => Proc.new { stack << -stack.pop                                  },
+        "mod"      => Proc.new { y, x = stack.pop, stack.pop; stack << x % y          },
+        "/mod"     => Proc.new { y, x = stack.pop, stack.pop; stack << x % y << x / y },
+        "dup"      => Proc.new { stack << stack.last                                  },
+        "drop"     => Proc.new { stack.pop                                            },
+        "swap"     => Proc.new { y, x = stack.pop, stack.pop; stack << y << x         },
+        "nip"      => Proc.new { y, x = stack.pop, stack.pop; stack << y              },
+        "tuck"     => Proc.new { y, x = stack.pop, stack.pop; stack << y << x << y    },
+        "("        => Proc.new { code.consume_until ")"                               },
+        "\\"       => Proc.new { code.clear                                           },
+        ":"        => Proc.new { define_word code, words                              },
+        "variable" => Proc.new { define_variable(code, words)                         },
+        "see"      => Proc.new { out << words[code.shift].see(words)                  },
+        "bye"      => Proc.new { exit                                                 },
+        "!"        => Proc.new {  words[last_word].value = stack.pop                  },
+        "@"        => Proc.new { stack << words[last_word].value                      },
       }
-      
+
       self.words = Words.new primitives.merge(primitives) {|name, lambda| PrimitiveWord.new(name, &lambda) }
       self.stack = []
       self.out = ""
@@ -34,10 +40,16 @@ module ForthR
       words[name] = CompositeWord.new(name, code.consume_until(";"), words)
     end
 
+    def define_variable(code, words)
+      self.last_word = code.shift.downcase
+      words[last_word]= VariableWord.new(self, last_word)
+    end
+
     def <<(line)
       self.code = Code.new line
       call code.shift until code.empty?
     end
+
 
     def call(word)
       words[word.downcase].call self
@@ -55,14 +67,14 @@ module ForthR
     def initialize(line = "")
       super line.split(" ")
     end
-    
+
     def consume_until(terminator)
       result = []
       result << shift until result.last == terminator
       result[0..-2]
     end
   end
-  
+
   class PrimitiveWord < Proc
     attr_reader :block, :name
 
@@ -113,7 +125,7 @@ module ForthR
     def initialize(string)
       self.number = Integer(string)
     end
-    
+
     def call(state)
       state.stack << number
     end
@@ -121,7 +133,7 @@ module ForthR
     def expand
       number.to_s
     end
-    
+
     def see(*)
       ":#{number.to_s}: <Undefined word>"
     end
@@ -140,7 +152,23 @@ module ForthR
       ":#{name}: <Undefined word>"
     end
   end
-  
+
+  class VariableWord < Struct.new(:state, :name)
+    attr_accessor :value
+
+    def call(*)
+      state.last_word = name
+    end
+
+    def see(*)
+      "Variable #{name}"
+    end
+
+    def expand(*)
+      name.to_s
+    end
+  end
+
   class Words < Struct.new(:dictionary)
     include Enumerable
 
@@ -158,8 +186,8 @@ module ForthR
     end
 
     private
-    
-    def is_numeric?(value) 
+
+    def is_numeric?(value)
       value.match /\A[+-]?\d+?(\.\d+)?\Z/
     end
   end

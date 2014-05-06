@@ -216,11 +216,19 @@ class TestStack < Minitest::Test
     assert_equal "Variable foo", @f.read
   end
 
-  def test_variable_expand
+  def test_variable_compilation_write
     @f << "variable foo"
     @f << ": new_foo foo ! ;"
     @f << "1 new_foo"
     @f << "foo @ ."
     assert_equal "1 ", @f.read
+  end
+
+  def test_variable_compilation_read
+    @f << "variable foo"
+    @f << ": read_foo foo @ ;"
+    @f << "42 foo !"
+    @f << "read_foo ."
+    assert_equal "42 ", @f.read
   end
 end

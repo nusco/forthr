@@ -199,16 +199,11 @@ class TestStack < Minitest::Test
 
   def test_variable_declaration
     @f << "variable foo"
-    assert_equal nil, @f.words["foo"].value
+    @f << "foo @ ."
+    assert_equal "0 ", @f.read
   end
 
-  def test_variable_set
-    @f << "variable foo"
-    @f << "2 foo ! .s"
-    assert_equal 2, @f.words["foo"].value
-  end
-
-  def test_variable_fetch
+  def test_variable_set_and_fetch
     @f << "variable foo"
     @f << "2 foo !"
     @f << "foo @ ."

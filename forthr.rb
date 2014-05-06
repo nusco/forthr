@@ -26,9 +26,9 @@ module ForthR
         ":"        => Proc.new { define_word code, words                              },
         "variable" => Proc.new { define_variable(code, words)                         },
         "see"      => Proc.new { out << words[code.shift].see(words)                  },
-        "false"  => Proc.new { stack << FALSE                                       },
-        "true"   => Proc.new { stack << TRUE                                        },
-        "="      => Proc.new { stack << (stack.pop == stack.pop ? TRUE : FALSE)     },
+        "false"    => Proc.new { stack << FALSE                                       },
+        "true"     => Proc.new { stack << TRUE                                        },
+        "="        => Proc.new { stack << (stack.pop == stack.pop ? TRUE : FALSE)     },
         "bye"      => Proc.new { exit                                                 },
         "!"        => Proc.new {  words[last_word].value = stack.pop                  },
         "@"        => Proc.new { stack << words[last_word].value                      },
@@ -160,6 +160,11 @@ module ForthR
 
   class VariableWord < Struct.new(:state, :name)
     attr_accessor :value
+
+    def initialize(*)
+      super
+      self.value = 0
+    end
 
     def call(*)
       state.last_word = name

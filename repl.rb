@@ -1,6 +1,6 @@
 require "./forthr"
 
-interpreter = ForthR.new
+interpreter = ForthR::Interpreter.new
 print '> '
 
 ARGF.each_line do |line|

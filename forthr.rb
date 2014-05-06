@@ -3,30 +3,35 @@ module ForthR
     FALSE = 0
     TRUE = -1
 
+    attr_accessor :last_word
+
     def initialize
       primitives = {
-        ".s"     => Proc.new { out << "#{stack.join(' ')} "                         },
-        "."      => Proc.new { out << "#{stack.pop} "                               },
-        "+"      => Proc.new { stack << stack.pop + stack.pop                       },
-        "-"      => Proc.new { stack << -stack.pop + stack.pop                      },
-        "*"      => Proc.new { stack << stack.pop * stack.pop                       },
-        "/"      => Proc.new { y, x = stack.pop, stack.pop; stack << x / y          },
-        "negate" => Proc.new { stack << -stack.pop                                  },
-        "mod"    => Proc.new { y, x = stack.pop, stack.pop; stack << x % y          },
-        "/mod"   => Proc.new { y, x = stack.pop, stack.pop; stack << x % y << x / y },
-        "dup"    => Proc.new { stack << stack.last                                  },
-        "drop"   => Proc.new { stack.pop                                            },
-        "swap"   => Proc.new { y, x = stack.pop, stack.pop; stack << y << x         },
-        "nip"    => Proc.new { y, x = stack.pop, stack.pop; stack << y              },
-        "tuck"   => Proc.new { y, x = stack.pop, stack.pop; stack << y << x << y    },
-        "("      => Proc.new { code.consume_until ")"                               },
-        "\\"     => Proc.new { code.clear                                           },
-        ":"      => Proc.new { define_word code, words                              },
-        "see"    => Proc.new { out << words[code.shift].see(words)                  },
+        ".s"       => Proc.new { out << "#{stack.join(' ')} "                         },
+        "."        => Proc.new { out << "#{stack.pop} "                               },
+        "+"        => Proc.new { stack << stack.pop + stack.pop                       },
+        "-"        => Proc.new { stack << -stack.pop + stack.pop                      },
+        "*"        => Proc.new { stack << stack.pop * stack.pop                       },
+        "/"        => Proc.new { y, x = stack.pop, stack.pop; stack << x / y          },
+        "negate"   => Proc.new { stack << -stack.pop                                  },
+        "mod"      => Proc.new { y, x = stack.pop, stack.pop; stack << x % y          },
+        "/mod"     => Proc.new { y, x = stack.pop, stack.pop; stack << x % y << x / y },
+        "dup"      => Proc.new { stack << stack.last                                  },
+        "drop"     => Proc.new { stack.pop                                            },
+        "swap"     => Proc.new { y, x = stack.pop, stack.pop; stack << y << x         },
+        "nip"      => Proc.new { y, x = stack.pop, stack.pop; stack << y              },
+        "tuck"     => Proc.new { y, x = stack.pop, stack.pop; stack << y << x << y    },
+        "("        => Proc.new { code.consume_until ")"                               },
+        "\\"       => Proc.new { code.clear                                           },
+        ":"        => Proc.new { define_word code, words                              },
+        "variable" => Proc.new { define_variable(code, words)                         },
+        "see"      => Proc.new { out << words[code.shift].see(words)                  },
         "false"  => Proc.new { stack << FALSE                                       },
         "true"   => Proc.new { stack << TRUE                                        },
         "="      => Proc.new { stack << (stack.pop == stack.pop ? TRUE : FALSE)     },
-        "bye"    => Proc.new { exit                                                 },
+        "bye"      => Proc.new { exit                                                 },
+        "!"        => Proc.new {  words[last_word].value = stack.pop                  },
+        "@"        => Proc.new { stack << words[last_word].value                      },
       }
 
       self.words = Words.new primitives.merge(primitives) {|name, lambda| PrimitiveWord.new(name, &lambda) }
@@ -40,10 +45,16 @@ module ForthR
       words[name] = CompositeWord.new(name, code.consume_until(";"), words)
     end
 
+    def define_variable(code, words)
+      self.last_word = code.shift.downcase
+      words[last_word]= VariableWord.new(self, last_word)
+    end
+
     def <<(line)
       self.code = Code.new line
       call code.shift until code.empty?
     end
+
 
     def call(word)
       words[word.downcase].call self
@@ -144,6 +155,22 @@ module ForthR
 
     def see(*)
       ":#{name}: <Undefined word>"
+    end
+  end
+
+  class VariableWord < Struct.new(:state, :name)
+    attr_accessor :value
+
+    def call(*)
+      state.last_word = name
+    end
+
+    def see(*)
+      "Variable #{name}"
+    end
+
+    def expand(*)
+      name.to_s
     end
   end
 

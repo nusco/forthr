@@ -196,4 +196,36 @@ class TestStack < Minitest::Test
     @f << "1 0 = .s"
     assert_equal "0 ", @f.read
   end
+
+  def test_variable_declaration
+    @f << "variable foo"
+    assert_equal nil, @f.words["foo"].value
+  end
+
+  def test_variable_set
+    @f << "variable foo"
+    @f << "2 foo ! .s"
+    assert_equal 2, @f.words["foo"].value
+  end
+
+  def test_variable_fetch
+    @f << "variable foo"
+    @f << "2 foo !"
+    @f << "foo @ ."
+    assert_equal "2 ", @f.read
+  end
+
+  def test_variable_see
+    @f << "variable foo"
+    @f << "see foo"
+    assert_equal "Variable foo", @f.read
+  end
+
+  def test_variable_expand
+    @f << "variable foo"
+    @f << ": new_foo foo ! ;"
+    @f << "1 new_foo"
+    @f << "foo @ ."
+    assert_equal "1 ", @f.read
+  end
 end

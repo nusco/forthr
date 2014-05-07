@@ -5,31 +5,32 @@ module ForthR
 
     def initialize
       primitives = {
-        ".s"       => Proc.new { out << "#{stack.join(' ')} "                         },
-        "."        => Proc.new { out << "#{stack.pop} "                               },
-        "+"        => Proc.new { stack << stack.pop + stack.pop                       },
-        "-"        => Proc.new { stack << -stack.pop + stack.pop                      },
-        "*"        => Proc.new { stack << stack.pop * stack.pop                       },
-        "/"        => Proc.new { y, x = stack.pop, stack.pop; stack << x / y          },
-        "negate"   => Proc.new { stack << -stack.pop                                  },
-        "mod"      => Proc.new { y, x = stack.pop, stack.pop; stack << x % y          },
-        "/mod"     => Proc.new { y, x = stack.pop, stack.pop; stack << x % y << x / y },
-        "dup"      => Proc.new { stack << stack.last                                  },
-        "drop"     => Proc.new { stack.pop                                            },
-        "swap"     => Proc.new { y, x = stack.pop, stack.pop; stack << y << x         },
-        "nip"      => Proc.new { y, x = stack.pop, stack.pop; stack << y              },
-        "tuck"     => Proc.new { y, x = stack.pop, stack.pop; stack << y << x << y    },
-        "("        => Proc.new { code.consume_until ")"                               },
-        "\\"       => Proc.new { code.clear                                           },
-        ":"        => Proc.new { define_word code, words                              },
-        "variable" => Proc.new { define_variable(code, words)                         },
-        "!"        => Proc.new { memory[stack.pop] = stack.pop                        },
-        "@"        => Proc.new { stack << memory[stack.pop]                           },
-        "see"      => Proc.new { out << words[code.shift].see(words)                  },
-        "false"    => Proc.new { stack << FALSE                                       },
-        "true"     => Proc.new { stack << TRUE                                        },
-        "="        => Proc.new { stack << (stack.pop == stack.pop ? TRUE : FALSE)     },
-        "bye"      => Proc.new { exit                                                 },
+        ".s"       => Proc.new { out << "#{stack.join(' ')} "                                  },
+        "."        => Proc.new { out << "#{stack.pop} "                                        },
+        "+"        => Proc.new { stack << stack.pop + stack.pop                                },
+        "-"        => Proc.new { stack << -stack.pop + stack.pop                               },
+        "*"        => Proc.new { stack << stack.pop * stack.pop                                },
+        "/"        => Proc.new { y, x = stack.pop, stack.pop; stack << x / y                   },
+        "negate"   => Proc.new { stack << -stack.pop                                           },
+        "mod"      => Proc.new { y, x = stack.pop, stack.pop; stack << x % y                   },
+        "/mod"     => Proc.new { y, x = stack.pop, stack.pop; stack << x % y << x / y          },
+        "dup"      => Proc.new { stack << stack.last                                           },
+        "drop"     => Proc.new { stack.pop                                                     },
+        "swap"     => Proc.new { y, x = stack.pop, stack.pop; stack << y << x                  },
+        "nip"      => Proc.new { y, x = stack.pop, stack.pop; stack << y                       },
+        "tuck"     => Proc.new { y, x = stack.pop, stack.pop; stack << y << x << y             },
+        "("        => Proc.new { code.consume_until ")"                                        },
+        "\\"       => Proc.new { code.clear                                                    },
+        ":"        => Proc.new { define_word code, words                                       },
+        "variable" => Proc.new { define_variable(code, words)                                  },
+        "!"        => Proc.new { memory[stack.pop] = stack.pop                                 },
+        "@"        => Proc.new { stack << memory[stack.pop]                                    },
+        "see"      => Proc.new { out << words[code.shift].see(words)                           },
+        "false"    => Proc.new { stack << FALSE                                                },
+        "true"     => Proc.new { stack << TRUE                                                 },
+        "="        => Proc.new { stack << (stack.pop == stack.pop ? TRUE : FALSE)              },
+        "?do"      => Proc.new { doloop stack.pop, stack.pop, code                             },
+        "bye"      => Proc.new { exit                                                          },
       }
 
       self.words = Words.new primitives.merge(primitives) {|name, lambda| PrimitiveWord.new(name, &lambda) }
@@ -41,23 +42,32 @@ module ForthR
     end
 
     def define_word(code, words)
-      name = code.shift.downcase
+      name = code.shift
       words[name] = CompositeWord.new(name, code.consume_until(";"), words)
     end
 
     def define_variable(code, words)
-      variable_name = code.shift.downcase
+      variable_name = code.shift
       words[variable_name] = VariableWord.new(variable_name, self.last_alloc)
       self.last_alloc += 1
     end
 
+    def doloop(from, to, code)
+      words = code.consume_until "loop"
+      (from + 1).upto(to) { execute words.clone }
+    end
+
     def <<(line)
-      self.code = Code.new line
-      call code.shift until code.empty?
+      self.code = Code.new line.downcase
+      execute code
+    end
+
+    def execute(words)
+      call words.shift until words.empty?
     end
 
     def call(word)
-      words[word.downcase].call self
+      words[word].call self
     end
 
     def read

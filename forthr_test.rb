@@ -228,4 +228,9 @@ class TestStack < Minitest::Test
     @f << "foo @ .s"
     assert_equal "42 ", @f.read
   end
+
+  def test_basic_counted_loop
+    @f << "4 1 ?do 2 1 + . loop"
+    assert_equal "3 3 3 ", @f.read
+  end
 end

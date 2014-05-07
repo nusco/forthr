@@ -197,17 +197,23 @@ class TestStack < Minitest::Test
     assert_equal "0 ", @f.read
   end
 
+  def test_store_and_fetch
+    @f << "42 100 !"
+    @f << "100 @ .s"
+    assert_equal "42 ", @f.read
+  end
+
   def test_variable_declaration
     @f << "variable foo"
-    @f << "foo @ ."
+    @f << "foo @ .s"
     assert_equal "0 ", @f.read
   end
 
-  def test_variable_set_and_fetch
+  def test_variable_address_on_stack
     @f << "variable foo"
-    @f << "2 foo !"
-    @f << "foo @ ."
-    assert_equal "2 ", @f.read
+    @f << "variable bar"
+    @f << "foo bar .s"
+    assert_equal "0 1 ", @f.read
   end
 
   def test_variable_see
@@ -216,19 +222,10 @@ class TestStack < Minitest::Test
     assert_equal "Variable foo", @f.read
   end
 
-  def test_variable_compilation_write
+  def test_variable_store_and_fetch
     @f << "variable foo"
-    @f << ": new_foo foo ! ;"
-    @f << "1 new_foo"
-    @f << "foo @ ."
-    assert_equal "1 ", @f.read
-  end
-
-  def test_variable_compilation_read
-    @f << "variable foo"
-    @f << ": read_foo foo @ ;"
     @f << "42 foo !"
-    @f << "read_foo ."
+    @f << "foo @ .s"
     assert_equal "42 ", @f.read
   end
 end
